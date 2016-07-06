@@ -1,22 +1,18 @@
 var m = require('mithril')
-var MyComponent = require('./components/MyComponent')
-
-//
-// Global variable for global state (e.g. currentUser)
-//
-window.App = {}
+var RepoMap = require('./components/RepoMap')
 
 //
 // Client-side routing
 //
 m.route.prefix('')
-m.route(document.getElementById('app'), '/', {
+m.route(document.getElementById('app'), '/lhorie/mithril', {
 
-  '/': {
-    view: function (ctrl) {
+  '/:username/:reponame': {
+
+    view: function (vnode) {
       return m('.app', [
-        m('h1', 'Node Catapult'),
-        m(MyComponent, { title: 'Welcome to my app!' })
+        m('h1', 'RepoMap'),
+        m(RepoMap, { username: vnode.attrs.username, reponame: vnode.attrs.reponame })
       ])
     }
   }

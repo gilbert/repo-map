@@ -13,8 +13,10 @@
     "bluebird": "^3.2.2",
     "body-parser": "^1.14.1",
     "browserify-middleware": "^5.0.2",
+    "d3": "^4.1.0",
     "express": "^4.12.4",
     "mithril": "github:lhorie/mithril.js#rewrite",
+    "papp-polyfill": "^1.0.0",
     "supertest-as-promised": "^3.1.0"
   },
   "devDependencies": {

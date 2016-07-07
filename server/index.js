@@ -7,8 +7,13 @@ var routes = express.Router()
 //
 // Provide a browserified file at a specified path
 //
+var shared = ['mithril', 'd3']
+
+routes.get('/vendor-bundle.js',
+  browserify(shared, { cache: true }))
+
 routes.get('/app-bundle.js',
-  browserify('./client/app.js'))
+  browserify('./client/app.js', { external: shared }))
 
 //
 // Example endpoint (also tested in test/server/index_test.js)

@@ -6,7 +6,7 @@ var RepoMap = require('./components/RepoMap')
 // Client-side routing
 //
 m.route.prefix('')
-m.route(document.getElementById('app'), '/lhorie/mithril', {
+m.route(document.getElementById('app'), '/lhorie/mithril.js', {
 
   '/:username/:reponame': {
 

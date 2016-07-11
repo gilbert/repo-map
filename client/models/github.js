@@ -5,10 +5,10 @@ var GitHub = module.exports
 
 GitHub.repoCommits = function (repo) {
   // TODO: Fetch all branches of repo
-  return request('/repos/lhorie/mithril/commits?ref=rewrite', true)
+  return request('/repos/lhorie/mithril.js/commits?ref=rewrite', true)
     .map(function (results) {
       // Simulate what we will return when we fetch all branches
-      return { 'rewrite': results }
+      return { 'rewrite': results, 'master': results }
     })
 }
 

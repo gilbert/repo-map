@@ -41,6 +41,9 @@ function request (endpoint, cache) {
   return m.request({
     method: 'GET',
     url: 'https://api.github.com' + endpoint,
+    config: function (xhr) {
+      if ( App.token ) xhr.setRequestHeader('Authorization', `token ${App.token}`)
+    }
   })
     .map(function (result) {
       if ( cache ) localStorage.setItem( endpoint, JSON.stringify(result) )

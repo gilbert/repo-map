@@ -16,10 +16,32 @@ routes.get('/app-bundle.js',
   browserify('./client/app.js', { external: shared }))
 
 //
-// Example endpoint (also tested in test/server/index_test.js)
+// GitHub OAuth
 //
-routes.get('/api/tags-example', function(req, res) {
-  res.send(['node', 'express', 'browserify', 'mithril'])
+var authom = require('authom')
+routes.get('/auth/:service', authom.app)
+
+var github = authom.createServer({
+  service: "github",
+  id: "8668a561268a0889fe7b",
+  secret: "76b116ecd633b5a521dd3b79af5906c58d8f2a73",
+  scope: ["repo"],
+})
+
+github.on('auth', function (req, res, githubData) {
+  console.log("It worked!", githubData)
+  res.set('Content-Type', 'text/html').send(`
+    <!doctype html>
+    <title>OAuth Success</title>
+    <script>
+      localStorage.setItem('token', '${githubData.token}');
+      window.location = '/';
+    </script>
+  `)
+})
+
+authom.on('error', function (req, res, githubData) {
+  res.redirect('/')
 })
 
 //

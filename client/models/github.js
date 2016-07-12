@@ -6,23 +6,15 @@ GitHub.repoCommits = function (repo) {
   return request('/repos/'+ repo +'/branches', true)
     .run(function (branches) {
       const branchNames = [];
+
       const branchRequestStreams = branches.map(function (branch) {
-        let branchName = branch.name;
-        branchNames.push(branchName);
-        let reqEndpoint = '/repos/'+ repo +'/commits?sha=' + branchName;
-        return request(reqEndpoint, true)
+        return request(`/repos/${repo}/commits?sha=${branch.name}`, true)
           .map(function (commitList) {
-            return commitList;
+            return { name: branch.name, commits: commitList };
           });
       });
-      return m.prop.combine(function(...branchRequestStreams) {
-        branchRequestStreams.pop();
-        const resultObj = {};
-        for (let i=0; i < branchRequestStreams.length; i++) {
-          resultObj[branchNames[i]] = branchRequestStreams[i]();
-        }
-        return resultObj;
-      }, branchRequestStreams)
+
+      return m.prop.flatSync(branchRequestStreams)
     })
 }
 

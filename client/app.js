@@ -1,4 +1,5 @@
 require('papp-polyfill')
+require('./ext')
 var m = require('mithril')
 var RepoMap = require('./components/RepoMap')
 

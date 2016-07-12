@@ -21,8 +21,8 @@ var modes = {
 }
 
 exports.oninit = function (vnode) {
-  vnode.state.branchCommits = GitHub.repoCommits(vnode.attrs.repo)
-  vnode.state.branchCommits.catch(err => console.log("branchCommits err:", err))
+  vnode.state.branches = GitHub.repoCommits(vnode.attrs.repo)
+  vnode.state.branches.catch(err => console.log("branches err:", err))
   vnode.state.timeWindow = m.prop( modes.nineDay )
 }
 
@@ -32,14 +32,14 @@ exports.view = function (vnode) {
   return m('.repo-map', [
     m('h2', vnode.attrs.repo),
 
-    vnode.state.branchCommits()
+    vnode.state.branches()
       ? m('.graph', { oncreate: renderGraph.papp(vnode.state) })
       : m('p', "Loading...")
     ,
 
     m('select', { onchange: e => vnode.state.timeWindow( modes[e.currentTarget.value] ) }, [
       m('option[value=nineDay]', "Last 9 days"),
-      m('option[value=auto]', "Automatic"),
+      m('option[value=auto]', "Last 30 Commits"),
     ]),
 
     m('.commit-info', activeCommit && [
@@ -50,45 +50,27 @@ exports.view = function (vnode) {
 }
 
 function renderGraph (state, vnode) {
-
   //
-  // First gather and structure commit data
+  // Map data we get back from branches to a format Timeline will accept
   //
-  var branchCommits = state.branchCommits()
-  window.chart = state.chart
+  var timelineDataStream = m.prop.combine(function (timeWindow, branches) {
 
-  // Map data we get back from branchCommits to a format Timeline will accept
-  var timelineDataStream = state.branchCommits.map(function (dataObj) {
-
-    return Object.keys(branchCommits).map(function (branchName, i) {
-
-      var commitTimes = branchCommits[branchName]
-        .map(function (commit) {
-          var time = new Date(commit.commit.author.date).getTime()
-
-          // Extend data point for timeline lib
-          commit.starting_time = time
-          commit.ending_time = time + 1000*60*15
-
-          return commit
-        })
-        .filter( time => time.starting_time > nineDaysAgo )
-
-      return { label: branchName, times: commitTimes }
+    return branches().map(function (branch) {
+      return {
+        label: branch.name,
+        times: processCommits(timeWindow().start, branch.commits)
+      }
     })
 
-  })
-
-  console.log("Using commit data", timelineDataStream())
-
+  }, [ state.timeWindow, state.branches ])
 
   //
-  // Next create the chart
+  // Next, create the chart
   //
   state.chart = Timeline()
     .stack(true)
     .display('circle')
-    .identifyPointBy( commit => console.log('id',commit.sha)||commit.sha )
+    .identifyPointBy( commit => commit.sha )
 
     .mouseover(function (d, i, datum) {
       state.activeCommit = d
@@ -99,7 +81,7 @@ function renderGraph (state, vnode) {
     })
 
   //
-  // Feed values from streams into the chart
+  // Stream config values into chart
   //
   state.timeWindow.map( time =>
     console.log("Formatting")||
@@ -111,7 +93,7 @@ function renderGraph (state, vnode) {
 
   //
   // And finally, add chart to page,
-  // auto-updating when any stream changes.
+  // auto-updating when config or data changes.
   //
   var svg = d3.select( vnode.dom ).append('svg')
     .attr('width', document.body.clientWidth)
@@ -123,4 +105,21 @@ function renderGraph (state, vnode) {
     state.chart.render(svg, b())
   }, [state.timeWindow, timelineDataStream])
   .error( err => console.log("ERROR:", err) )
+}
+
+function processCommits (startTime, commits) {
+  var commitTimes = commits
+    .map(function (commit) {
+      var time = new Date(commit.commit.author.date).getTime()
+
+      // Extend data point for timeline lib
+      commit.starting_time = time
+      commit.ending_time = time + 1000*60*15
+
+      return commit
+    })
+
+  return startTime > 0
+    ? commitTimes.filter( time => time.starting_time > nineDaysAgo )
+    : commitTimes
 }

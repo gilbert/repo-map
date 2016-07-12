@@ -1,33 +1,26 @@
 var m = require('mithril')
 
-
 var GitHub = module.exports
 
 GitHub.repoCommits = function (repo) {
-  // TODO: Fetch all branches of repo
-  return request('/repos/lhorie/mithril.js/branches', true)
+  return request('/repos/'+ repo +'/branches', true)
     .run(function (branches) {
-      console.log('branches', branches);
-      var branchRequestStreams = branches.map(function (branch) {
+      const branchNames = [];
+      const branchRequestStreams = branches.map(function (branch) {
         let branchName = branch.name;
-        let reqEndpoint = '/repos/lhorie/mithril.js/commits?sha=' + branchName;
+        branchNames.push(branchName);
+        let reqEndpoint = '/repos/'+ repo +'/commits?sha=' + branchName;
         return request(reqEndpoint, true)
           .map(function (commitList) {
-            console.log('commitList', commitList);
             return commitList;
           });
       });
-
       return m.prop.combine(function(...branchRequestStreams) {
         branchRequestStreams.pop();
-        var resultObj = {};
-        // console.log('argStreams', branchRequestStreams.map(f=>f()), branchRequestStreams.length);
+        const resultObj = {};
         for (let i=0; i < branchRequestStreams.length; i++) {
-          resultObj[i] = branchRequestStreams[i]();
-          console.log('resultObj[i]', resultObj[i], i);
-          console.log('resultObj', resultObj);
+          resultObj[branchNames[i]] = branchRequestStreams[i]();
         }
-        console.log('done', resultObj);
         return resultObj;
       }, branchRequestStreams)
     })

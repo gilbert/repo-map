@@ -50,6 +50,8 @@ function renderGraph (state, vnode) {
 
   var branchData = Object.keys(branchCommits).map(function (branchName, i) {
 
+    // TODO: d3 magic
+    // https://github.com/jiahuang/d3-timeline
     var commitTimes = branchCommits[branchName]
       .map(function (commit) {
         var time = new Date(commit.commit.author.date).getTime()
@@ -63,20 +65,6 @@ function renderGraph (state, vnode) {
       .filter( time => time.starting_time > nineDaysAgo )
 
     return { label: branchName, times: commitTimes }
-
-    // var commits = branchCommits[branchName]
-    // var commits = [
-    //   {class: "pA", label: "person a", times: [
-    //     {"starting_time": 1355752800000, "ending_time": 1355759900000},
-    //     {"starting_time": 1355767900000, "ending_time": 1355774400000}]},
-    //   {class: "pB", label: "person b", times: [
-    //     {"starting_time": 1355759910000, "ending_time": 1355761900000}]},
-    //   {class: "pC", label: "person c", times: [
-    //     {"starting_time": 1355761910000, "ending_time": 1355763910000}]}
-    // ];
-    // console.log('commits', commits);
-    // TODO: d3 magic
-    // https://github.com/jiahuang/d3-timeline
   })
 
   console.log("Using commit data", branchData)

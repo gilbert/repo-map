@@ -6,14 +6,18 @@ var d3 = require('d3')
 var Timeline = require('d3-timeline')
 var timeAgo = require('date-fns/distance_in_words_to_now')
 
-var nineDaysAgo = Date.now() - 1000 * 60 * 60 * 24 * 9
 var modes = {
-  nineDay: {
-    start: nineDaysAgo,
+  nineDays: {
+    start: Date.now() - 1000 * 60 * 60 * 24 * 9,
     end: Date.now(),
     tickFormat: { tickTime: d3.timeDay, tickSize: 6 }
   },
-  auto: {
+  thirtyDays: {
+    start: Date.now() - 1000 * 60 * 60 * 24 * 30,
+    end: Date.now(),
+    tickFormat: { tickTime: d3.timeDay, tickSize: 6 }
+  },
+  thirtyCommits: {
     start: 0,
     end: 0,
     tickFormat: { tickTime: d3.timeDay, tickSize: 6 }
@@ -23,7 +27,7 @@ var modes = {
 exports.oninit = function (vnode) {
   vnode.state.branches = GitHub.repoCommits(vnode.attrs.repo)
   vnode.state.branches.catch(err => console.log("branches err:", err))
-  vnode.state.timeWindow = m.prop( modes.nineDay )
+  vnode.state.timeWindow = m.prop( modes.nineDays )
 }
 
 exports.view = function (vnode) {
@@ -38,8 +42,9 @@ exports.view = function (vnode) {
     ,
 
     m('select', { onchange: e => vnode.state.timeWindow( modes[e.currentTarget.value] ) }, [
-      m('option[value=nineDay]', "Last 9 days"),
-      m('option[value=auto]', "Last 30 Commits"),
+      m('option[value=nineDays]', "Last 9 days"),
+      m('option[value=thirtyDays]', "Last 30 days"),
+      m('option[value=thirtyCommits]', "Last 30 Commits"),
     ]),
 
     m('.commit-info', activeCommit && [
@@ -120,6 +125,6 @@ function processCommits (startTime, commits) {
     })
 
   return startTime > 0
-    ? commitTimes.filter( time => time.starting_time > nineDaysAgo )
+    ? commitTimes.filter( time => time.starting_time > startTime )
     : commitTimes
 }

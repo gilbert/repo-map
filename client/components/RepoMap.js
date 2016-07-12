@@ -9,6 +9,7 @@ var timeAgo = require('date-fns/distance_in_words_to_now')
 
 exports.oninit = function (vnode) {
   vnode.state.branchCommits = GitHub.repoCommits(vnode.attrs.repo)
+  vnode.state.branchCommits.catch(err => console.log("branchCommits err:", err))
 }
 
 exports.view = function (vnode) {
@@ -50,6 +51,8 @@ function renderGraph (state, vnode) {
 
   var branchData = Object.keys(branchCommits).map(function (branchName, i) {
 
+    // TODO: d3 magic
+    // https://github.com/jiahuang/d3-timeline
     var commitTimes = branchCommits[branchName]
       .map(function (commit) {
         var time = new Date(commit.commit.author.date).getTime()

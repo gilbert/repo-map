@@ -14,7 +14,7 @@ GitHub.repoCommits = function (repo) {
           });
       });
 
-      return m.prop.flatSync(branchRequestStreams)
+      return m.prop.merge(branchRequestStreams)
     })
 }
 

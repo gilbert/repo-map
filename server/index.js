@@ -23,8 +23,8 @@ routes.get('/auth/:service', authom.app)
 
 var github = authom.createServer({
   service: "github",
-  id: "8668a561268a0889fe7b",
-  secret: "76b116ecd633b5a521dd3b79af5906c58d8f2a73",
+  id: process.env.GITHUB_ID,
+  secret: process.env.GITHUB_SECRET,
   scope: ["repo"],
 })
 

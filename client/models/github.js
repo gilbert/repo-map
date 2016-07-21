@@ -2,19 +2,44 @@ var m = require('mithril')
 
 var GitHub = module.exports
 
-GitHub.repoCommits = function (repo) {
-  return request('/repos/'+ repo +'/branches', true)
+GitHub.allBranchesCommits = function (repo) {
+  return GitHub.repoBranches(repo)
     .run(function (branches) {
-      const branchNames = [];
 
-      const branchRequestStreams = branches.map(function (branch) {
-        return request(`/repos/${repo}/commits?sha=${branch.name}`, true)
+      const branchRequestStreams = branches.map(function (branchData) {
+        return GitHub.repoBranchCommits(repo, branchData.name)
           .map(function (commitList) {
-            return { name: branch.name, commits: commitList };
-          });
+            return { name: branchData.name, commits: commitList };
+          })
       });
 
       return m.prop.merge(branchRequestStreams)
+    })
+}
+
+GitHub.repoBranches = function (repo) {
+  return request('/repos/'+ repo +'/branches', true)
+}
+
+GitHub.repoBranchCommits = function (repo, branch) {
+  return request(`/repos/${repo}/commits?sha=${branch}`, true)
+}
+
+GitHub.singleBranchForkCommits = function (repo, branch) {
+  return request(`/repos/${repo}/forks?sort=newest`, true)
+    .run(function (forks) {
+      const forkStreams = forks.map( fork =>
+        GitHub.repoBranchCommits(fork.full_name, branch)
+          .map(function (commitList) {
+            return { name: fork.owner.login, commits: commitList }
+          })
+          .catch(function (err) {
+            console.log("Fetch fork error:", err)
+            return { name: fork.owner.login, commits: [] }
+          })
+      )
+
+      return m.prop.merge( forkStreams )
     })
 }
 

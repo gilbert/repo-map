@@ -25,9 +25,10 @@ var modes = {
 }
 
 exports.oninit = function (vnode) {
-  vnode.state.branches = GitHub.repoCommits(vnode.attrs.repo)
+  // vnode.state.branches = GitHub.allBranchesCommits(vnode.attrs.repo)
+  vnode.state.branches = GitHub.singleBranchForkCommits(vnode.attrs.repo, 'sprint.data-structures')
   vnode.state.branches.catch(err => console.log("branches err:", err))
-  vnode.state.timeWindow = m.prop( modes.nineDays )
+  vnode.state.timeWindow = m.prop( modes.thirtyCommits )
 }
 
 exports.view = function (vnode) {
@@ -89,7 +90,6 @@ function renderGraph (state, vnode) {
   // Stream config values into chart
   //
   state.timeWindow.map( time =>
-    console.log("Formatting")||
     state.chart
       .beginning(time.start)
       .ending(time.end)
@@ -106,10 +106,9 @@ function renderGraph (state, vnode) {
   state.chart.init(svg)
 
   m.prop.combine(function (a, b) {
-    console.log("Rendering")
     state.chart.render(svg, b())
   }, [state.timeWindow, timelineDataStream])
-  .error( err => console.log("ERROR:", err) )
+  .error( err => console.log("RENDER ERROR:", err) )
 }
 
 function processCommits (startTime, commits) {

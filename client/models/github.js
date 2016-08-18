@@ -1,4 +1,5 @@
 var m = require('mithril')
+var alertify = require('alertify.js')
 
 var GitHub = module.exports
 
@@ -65,5 +66,9 @@ function request (endpoint, cache) {
     .map(function (result) {
       if ( cache ) localStorage.setItem( endpoint, JSON.stringify(result) )
       return result
+    })
+    .catch(function (err) {
+      console.log("url error:", err)
+      alertify.error("Error log message");
     })
 }

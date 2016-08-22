@@ -1,5 +1,4 @@
 var m = require('mithril')
-var alertify = require('alertify.js')
 
 var GitHub = module.exports
 

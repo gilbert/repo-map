@@ -2,6 +2,9 @@ var browserify = require('browserify-middleware')
 var express = require('express')
 var Path = require('path')
 
+//isolated instance of middleware and routes (mini application)
+//can be used as middleware in another router's use() method
+//you can add middleware and HTTP method routes to it
 var routes = express.Router()
 
 //
@@ -9,6 +12,9 @@ var routes = express.Router()
 //
 var shared = ['mithril', 'd3']
 
+//browserify() can take a string, file object, or array of those types
+//essentially this is bundling up the mithril and d3 dependencies to serve
+//them to the browser.
 routes.get('/vendor-bundle.js',
   browserify(shared, { cache: true }))
 

@@ -26,7 +26,8 @@ var modes = {
 
 exports.oninit = function (vnode) {
   // vnode.state.branches = GitHub.allBranchesCommits(vnode.attrs.repo)
-  vnode.state.branches = GitHub.singleBranchForkCommits(vnode.attrs.repo, 'sprint.data-structures')
+  // set state.branches to the repo's 'sprint.data-structures' branch list
+  vnode.state.branches = GitHub.singleBranchForkCommits(vnode.attrs.repo, 'master')
   vnode.state.branches.catch(err => console.log("branches err:", err))
   vnode.state.timeWindow = m.prop( modes.thirtyCommits )
 }

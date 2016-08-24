@@ -27,7 +27,9 @@ GitHub.repoBranchCommits = function (repo, branch) {
   return request(`/repos/${repo}/commits?sha=${branch}`, true)
 }
 
-// takes repo name and branch name inputs.
+// takes repo name and branch name inputs and returns an array of fork array streams
+  // each fork array stream made up of branch array streams containing all the commits
+  // for each branch.
 GitHub.singleBranchForkCommits = function (repo, branch) {
   return request(`/repos/${repo}/forks?sort=newest`, true)
     .run(function (forks) {

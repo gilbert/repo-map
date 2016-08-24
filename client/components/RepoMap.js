@@ -36,7 +36,6 @@ exports.view = function (vnode) {
   var activeCommit = vnode.state.activeCommit
 
   return m('.repo-map', [
-    m('h2', vnode.attrs.repo),
 
     vnode.state.branches()
       ? m('.graph', { oncreate: renderGraph.papp(vnode.state) })

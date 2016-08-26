@@ -25,20 +25,18 @@ var modes = {
 }
 
 exports.oninit = function (vnode) {
-  // vnode.state.branches = GitHub.allBranchesCommits(vnode.attrs.repo)
-  // set state.branches to the repo's 'sprint.data-structures' branch list
-  vnode.state.branches = GitHub.singleBranchForkCommits(vnode.attrs.repo, 'master')
-  vnode.state.branches.catch(err => console.log("branches err:", err))
+  vnode.state.branches = GitHub.singleBranchForkCommits(vnode.attrs.repo, 'none')
+  vnode.state.branches.catch(err => console.log("forkBranches err:", err))
   vnode.state.timeWindow = m.prop( modes.thirtyCommits )
 }
 
 exports.view = function (vnode) {
   var activeCommit = vnode.state.activeCommit
-
+  console.log('vnode.state.branches', vnode.state.branches);
   return m('.repo-map', [
 
     vnode.state.branches()
-      ? m('.graph', { oncreate: renderGraph.papp(vnode.state) })
+      ? m('.graph', { onupdate: renderGraph.papp(vnode.state) })
       : m('p', "Loading...")
     ,
 
@@ -46,6 +44,12 @@ exports.view = function (vnode) {
       m('option[value=nineDays]', "Last 9 days"),
       m('option[value=thirtyDays]', "Last 30 days"),
       m('option[value=thirtyCommits]', "Last 30 Commits"),
+    ]),
+
+    m('select', { onchange: e => vnode.state.branches = GitHub.singleBranchForkCommits( vnode.attrs.repo, e.currentTarget.value ) }, [
+      m('option[value=master]', "master"),
+      m('option[value=other1]', "other1"),
+      m('option[value=other2]', "other2"),
     ]),
 
     m('.commit-info', activeCommit && [
@@ -57,11 +61,12 @@ exports.view = function (vnode) {
 
 function renderGraph (state, vnode) {
   //
-  // Map data we get back from branches to a format Timeline will accept
+  // Map data we get back from forkBranches to a format Timeline will accept
   //
-  var timelineDataStream = m.prop.combine(function (timeWindow, branches) {
+  console.log('renderGraph ran!');
+  var timelineDataStream = m.prop.combine(function (timeWindow, forkBranches) {
 
-    return branches().map(function (branch) {
+    return forkBranches().map(function (branch) {
       return {
         label: branch.name,
         times: processCommits(timeWindow().start, branch.commits)

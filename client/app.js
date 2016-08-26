@@ -26,7 +26,6 @@ m.route(document.getElementById('app'), '/lhorie/mithril.js', {
           : m('a[href=/auth/github]', "Connect with GitHub")
         ,
         m('h2', [vnode.attrs.username + '/' + vnode.attrs.reponame]),
-        //TODO: future feature, get list of repo branches to choose from
         m(RepoMap, { repo: vnode.attrs.username + '/' + vnode.attrs.reponame }),
       ])
     }

@@ -2,20 +2,6 @@ var m = require('mithril')
 
 var GitHub = module.exports
 
-//function allBranchCommits takes a repo input and returns
-// GitHub.allBranchesCommits = function (repo) {
-//   return GitHub.repoBranches(repo)
-//     .run(function (branches) {
-//       const branchRequestStreams = branches.map(function (branchData) {
-//         return GitHub.repoBranchCommits(repo, branchData.name)
-//           .map(function (commitList) {
-//             return { name: branchData.name, commits: commitList };
-//           })
-//       });
-//
-//       return m.prop.merge(branchRequestStreams)
-//     })
-// }
 
 // takes a repo and returns array stream of branch objects
 GitHub.repoBranches = function (repo) {
@@ -31,6 +17,7 @@ GitHub.repoBranchCommits = function (repo, branch) {
   // each fork array stream made up of branch array streams containing all the commits
   // for each branch.
 GitHub.singleBranchForkCommits = function (repo, branch) {
+  console.log("singleBranchForkCommits ran");
   return request(`/repos/${repo}/forks?sort=newest`, true)
     .run(function (forks) {
       const forkStreams = forks.map( fork =>
@@ -46,6 +33,21 @@ GitHub.singleBranchForkCommits = function (repo, branch) {
 
       return m.prop.merge( forkStreams )
     })
+}
+
+//function allBranchCommits takes a repo input and returns
+GitHub.allBranchesCommits = function (repo) {
+  return GitHub.repoBranches(repo)
+  .run(function (branches) {
+    const branchRequestStreams = branches.map(function (branchData) {
+      return GitHub.repoBranchCommits(repo, branchData.name)
+      .map(function (commitList) {
+        return { name: branchData.name, commits: commitList };
+      })
+    });
+
+    return m.prop.merge(branchRequestStreams)
+  })
 }
 
 //

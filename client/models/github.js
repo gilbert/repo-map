@@ -13,6 +13,10 @@ GitHub.repoBranchCommits = function (repo, branch) {
   return request(`/repos/${repo}/commits?sha=${branch}`, true)
 }
 
+// takes repo and returns a list of available branches for that repo
+GitHub.repoBranchList = function (repo) {
+  return request(`/repos/${repo}/branches`, true)
+}
 // takes repo name and branch name inputs and returns an array of fork array streams
   // each fork array stream made up of branch array streams containing all the commits
   // for each branch.

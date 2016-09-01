@@ -25,9 +25,10 @@ var modes = {
 }
 
 exports.oninit = function (vnode) {
-  vnode.state.branches = GitHub.singleBranchForkCommits(vnode.attrs.repo, 'none')
+  vnode.state.branches = GitHub.singleBranchForkCommits(vnode.attrs.repo, vnode.attrs.branch)
   vnode.state.branches.catch(err => console.log("forkBranches err:", err))
   vnode.state.timeWindow = m.prop( modes.thirtyCommits )
+  vnode.state.availableBranches = GitHub.repoBranchList(vnode.attrs.repo)
 }
 
 exports.view = function (vnode) {
@@ -36,20 +37,31 @@ exports.view = function (vnode) {
   return m('.repo-map', [
 
     vnode.state.branches()
-      ? m('.graph', { onupdate: renderGraph.papp(vnode.state) })
+      ? m('.graph', { oncreate: renderGraph.papp(vnode.state) })
       : m('p', "Loading...")
     ,
 
-    m('select', { onchange: e => vnode.state.timeWindow( modes[e.currentTarget.value] ) }, [
+    m('select', { onchange: e => {
+      vnode.state.timeWindow( modes[e.currentTarget.value] )
+      //TODO: append ?days=30, etc as this changes
+      //history.pushState({ url: `forks/${vnode.attrs.repo}/${e.currentTarget.value}` }, '', `/forks/${vnode.attrs.repo}/${e.currentTarget.value}`)
+      }}, [
       m('option[value=nineDays]', "Last 9 days"),
       m('option[value=thirtyDays]', "Last 30 days"),
       m('option[value=thirtyCommits]', "Last 30 Commits"),
     ]),
 
-    m('select', { onchange: e => vnode.state.branches = GitHub.singleBranchForkCommits( vnode.attrs.repo, e.currentTarget.value ) }, [
+    m('select', { onchange: e => {
+      history.pushState({ url: `forks/${vnode.attrs.repo}/${e.currentTarget.value}` }, '', `/forks/${vnode.attrs.repo}/${e.currentTarget.value}`)
+      // let newBranches = GitHub.singleBranchForkCommits(vnode.attrs.)
+      // vnode.state.branches( newBranches )
+      GitHub.singleBranchForkCommits(vnode.attrs.repo, e.currentTarget.value).map(vnode.state.branches)
+      console.log('available branches', vnode.state.availableBranches())
+      console.log('pushState', history.state)
+      }}, [
       m('option[value=master]', "master"),
-      m('option[value=other1]', "other1"),
-      m('option[value=other2]', "other2"),
+      m('option[value=sprint.fullstack-exercise]', "sprint.fullstack-exercise"),
+      m('option[value=Macabre1]', "Macabre1"),
     ]),
 
     m('.commit-info', activeCommit && [

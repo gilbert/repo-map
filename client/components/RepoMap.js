@@ -45,6 +45,7 @@ exports.view = function (vnode) {
       vnode.state.timeWindow( modes[e.currentTarget.value] )
       //TODO: append ?days=30, etc as this changes
       //history.pushState({ url: `forks/${vnode.attrs.repo}/${e.currentTarget.value}` }, '', `/forks/${vnode.attrs.repo}/${e.currentTarget.value}`)
+      console.log('available branches', vnode.state.availableBranches())
       }}, [
       m('option[value=nineDays]', "Last 9 days"),
       m('option[value=thirtyDays]', "Last 30 days"),
@@ -56,13 +57,9 @@ exports.view = function (vnode) {
       // let newBranches = GitHub.singleBranchForkCommits(vnode.attrs.)
       // vnode.state.branches( newBranches )
       GitHub.singleBranchForkCommits(vnode.attrs.repo, e.currentTarget.value).map(vnode.state.branches)
-      console.log('available branches', vnode.state.availableBranches())
       console.log('pushState', history.state)
-      }}, [
-      m('option[value=master]', "master"),
-      m('option[value=sprint.fullstack-exercise]', "sprint.fullstack-exercise"),
-      m('option[value=Macabre1]', "Macabre1"),
-    ]),
+      }}, vnode.state.availableBranches().map( (option) => m(`option[value=${option.name}]`, `${option.name}`))
+    ),
 
     m('.commit-info', activeCommit && [
       m('h3', activeCommit.commit.message),

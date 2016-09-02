@@ -28,12 +28,11 @@ exports.oninit = function (vnode) {
   vnode.state.branches = GitHub.singleBranchForkCommits(vnode.attrs.repo, vnode.attrs.branch)
   vnode.state.branches.catch(err => console.log("forkBranches err:", err))
   vnode.state.timeWindow = m.prop( modes.thirtyCommits )
-  vnode.state.availableBranches = GitHub.repoBranchList(vnode.attrs.repo)
+  vnode.state.availableBranches = GitHub.repoBranches(vnode.attrs.repo)
 }
 
 exports.view = function (vnode) {
   var activeCommit = vnode.state.activeCommit
-  console.log('vnode.state.branches', vnode.state.branches);
   return m('.repo-map', [
 
     vnode.state.branches()
@@ -43,9 +42,6 @@ exports.view = function (vnode) {
 
     m('select', { onchange: e => {
       vnode.state.timeWindow( modes[e.currentTarget.value] )
-      //TODO: append ?days=30, etc as this changes
-      //history.pushState({ url: `forks/${vnode.attrs.repo}/${e.currentTarget.value}` }, '', `/forks/${vnode.attrs.repo}/${e.currentTarget.value}`)
-      console.log('available branches', vnode.state.availableBranches())
       }}, [
       m('option[value=nineDays]', "Last 9 days"),
       m('option[value=thirtyDays]', "Last 30 days"),
@@ -54,10 +50,7 @@ exports.view = function (vnode) {
 
     m('select', { onchange: e => {
       history.pushState({ url: `forks/${vnode.attrs.repo}/${e.currentTarget.value}` }, '', `/forks/${vnode.attrs.repo}/${e.currentTarget.value}`)
-      // let newBranches = GitHub.singleBranchForkCommits(vnode.attrs.)
-      // vnode.state.branches( newBranches )
       GitHub.singleBranchForkCommits(vnode.attrs.repo, e.currentTarget.value).map(vnode.state.branches)
-      console.log('pushState', history.state)
       }}, vnode.state.availableBranches().map( (option) => m(`option[value=${option.name}]`, `${option.name}`))
     ),
 
@@ -72,7 +65,6 @@ function renderGraph (state, vnode) {
   //
   // Map data we get back from forkBranches to a format Timeline will accept
   //
-  console.log('renderGraph ran!');
   var timelineDataStream = m.prop.combine(function (timeWindow, forkBranches) {
 
     return forkBranches().map(function (branch) {

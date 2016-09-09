@@ -14,9 +14,9 @@ App.clearToken = function () {
 // Client-side routing
 //
 m.route.prefix('')
-m.route(document.getElementById('app'), '/lhorie/mithril.js', {
+m.route(document.getElementById('app'), '/forks/makersquare/MKS-ATX-javascript-koans/master', {
 
-  '/:username/:reponame': {
+  '/forks/:username/:reponame/:branch': {
 
     view: function (vnode) {
       return m('.app', [
@@ -25,7 +25,8 @@ m.route(document.getElementById('app'), '/lhorie/mithril.js', {
           ? m('button', { onclick: App.clearToken }, 'Clear GitHub Token')
           : m('a[href=/auth/github]', "Connect with GitHub")
         ,
-        m(RepoMap, { repo: vnode.attrs.username + '/' + vnode.attrs.reponame }),
+        m('h2', [vnode.attrs.username + '/' + vnode.attrs.reponame + '/' + vnode.attrs.branch]),
+        m(RepoMap, { repo: vnode.attrs.username + '/' + vnode.attrs.reponame, branch: vnode.attrs.branch }),
       ])
     }
   }

@@ -10,6 +10,7 @@
   "author": "Gilbert <gilbertbagrza@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "alertify.js": "^1.0.12",
     "authom": "^0.4.36",
     "bluebird": "^3.2.2",
     "body-parser": "^1.14.1",

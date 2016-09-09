@@ -25,28 +25,34 @@ var modes = {
 }
 
 exports.oninit = function (vnode) {
-  // vnode.state.branches = GitHub.allBranchesCommits(vnode.attrs.repo)
-  vnode.state.branches = GitHub.singleBranchForkCommits(vnode.attrs.repo, 'sprint.data-structures')
-  vnode.state.branches.catch(err => console.log("branches err:", err))
+  vnode.state.branches = GitHub.singleBranchForkCommits(vnode.attrs.repo, vnode.attrs.branch)
+  vnode.state.branches.catch(err => console.log("forkBranches err:", err))
   vnode.state.timeWindow = m.prop( modes.thirtyCommits )
+  vnode.state.availableBranches = GitHub.repoBranches(vnode.attrs.repo)
 }
 
 exports.view = function (vnode) {
   var activeCommit = vnode.state.activeCommit
-
   return m('.repo-map', [
-    m('h2', vnode.attrs.repo),
 
     vnode.state.branches()
       ? m('.graph', { oncreate: renderGraph.papp(vnode.state) })
       : m('p', "Loading...")
     ,
 
-    m('select', { onchange: e => vnode.state.timeWindow( modes[e.currentTarget.value] ) }, [
+    m('select', { onchange: e => {
+      vnode.state.timeWindow( modes[e.currentTarget.value] )
+      }}, [
       m('option[value=nineDays]', "Last 9 days"),
       m('option[value=thirtyDays]', "Last 30 days"),
       m('option[value=thirtyCommits]', "Last 30 Commits"),
     ]),
+
+    m('select', { onchange: e => {
+      history.pushState({ url: `forks/${vnode.attrs.repo}/${e.currentTarget.value}` }, '', `/forks/${vnode.attrs.repo}/${e.currentTarget.value}`)
+      GitHub.singleBranchForkCommits(vnode.attrs.repo, e.currentTarget.value).map(vnode.state.branches)
+      }}, vnode.state.availableBranches().map( (option) => m(`option[value=${option.name}]`, `${option.name}`))
+    ),
 
     m('.commit-info', activeCommit && [
       m('h3', activeCommit.commit.message),
@@ -57,11 +63,11 @@ exports.view = function (vnode) {
 
 function renderGraph (state, vnode) {
   //
-  // Map data we get back from branches to a format Timeline will accept
+  // Map data we get back from forkBranches to a format Timeline will accept
   //
-  var timelineDataStream = m.prop.combine(function (timeWindow, branches) {
+  var timelineDataStream = m.prop.combine(function (timeWindow, forkBranches) {
 
-    return branches().map(function (branch) {
+    return forkBranches().map(function (branch) {
       return {
         label: branch.name,
         times: processCommits(timeWindow().start, branch.commits)

@@ -18,10 +18,11 @@ GitHub.repoBranchCommits = function (repo, branch) {
   // for each branch.
 GitHub.singleBranchForkCommits = function (repo, branch) {
   return request(`/repos/${repo}/forks?sort=newest`, true)
-    .run(function (forks) {
+    .then(function (forks) {
+
       const forkStreams = forks.map( fork =>
         GitHub.repoBranchCommits(fork.full_name, branch)
-          .map(function (commitList) {
+          .then(function (commitList) {
             return { name: fork.owner.login, commits: commitList }
           })
           .catch(function (err) {
@@ -30,23 +31,24 @@ GitHub.singleBranchForkCommits = function (repo, branch) {
           })
       )
 
-      return m.prop.merge( forkStreams )
+      return Promise.all( forkStreams )
     })
 }
 
 //function allBranchCommits takes a repo input and returns
 GitHub.allBranchesCommits = function (repo) {
   return GitHub.repoBranches(repo)
-  .run(function (branches) {
-    const branchRequestStreams = branches.map(function (branchData) {
-      return GitHub.repoBranchCommits(repo, branchData.name)
-      .map(function (commitList) {
-        return { name: branchData.name, commits: commitList };
-      })
-    });
+    .then(function (branches) {
 
-    return m.prop.merge(branchRequestStreams)
-  })
+      const branchRequestStreams = branches.map(function (branchData) {
+        return GitHub.repoBranchCommits(repo, branchData.name)
+          .then(function (commitList) {
+            return { name: branchData.name, commits: commitList }
+          })
+      });
+
+      return Promise.all(branchRequestStreams)
+    })
 }
 
 //
@@ -64,7 +66,8 @@ var streamCache = {}
   // the results are mapped to an array (and cached if cache boolean is true)
 function request (endpoint, cache) {
   if ( cache && localStorage.getItem(endpoint) ) {
-    return m.prop( JSON.parse( localStorage.getItem(endpoint) ) )
+    m.redraw() // Schedule a redraw (to emulate m.request)
+    return Promise.resolve( JSON.parse( localStorage.getItem(endpoint) ) )
   }
 
   return m.request({
@@ -74,13 +77,15 @@ function request (endpoint, cache) {
       if ( App.token ) xhr.setRequestHeader('Authorization', `token ${App.token}`)
     }
   })
-    .map(function (result) {
+    .then(function (result) {
       console.log('request function endpoint', endpoint)
       console.log('request function, map result', result)
+
       if ( cache ) localStorage.setItem( endpoint, JSON.stringify(result) )
       return result
     })
     .catch(function (err) {
       console.log("url error:", err)
+      throw err
     })
 }

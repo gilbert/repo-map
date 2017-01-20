@@ -14,7 +14,7 @@ App.clearToken = function () {
 // Client-side routing
 //
 m.route.prefix('')
-m.route(document.getElementById('app'), '/forks/makersquare/MKS-ATX-javascript-koans/master', {
+m.route(document.getElementById('app'), '/forks/hackreactor/hratx25-underbar/master', {
 
   '/forks/:username/:reponame/:branch': {
 

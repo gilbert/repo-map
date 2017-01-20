@@ -1,4 +1,5 @@
 var m = require('mithril')
+var Stream = require('mithril/stream')
 var GitHub = require('../models/github')
 
 // d3-timeline needs d3 to be globally-accessible
@@ -25,34 +26,65 @@ var modes = {
 }
 
 exports.oninit = function (vnode) {
-  vnode.state.branches = GitHub.singleBranchForkCommits(vnode.attrs.repo, vnode.attrs.branch)
-  vnode.state.branches.catch(err => console.log("forkBranches err:", err))
-  vnode.state.timeWindow = m.prop( modes.thirtyCommits )
-  vnode.state.availableBranches = GitHub.repoBranches(vnode.attrs.repo)
+  console.log("hm")
+  var state = vnode.state
+
+  state.mode = 'thirtyCommits'
+  state.branches = Stream()
+
+  GitHub.singleBranchForkCommits(vnode.attrs.repo, vnode.attrs.branch)
+    .then( state.branches )
+    .catch(err => console.log("forkBranches err:", err))
+
+  state.timeWindow = Stream( modes.thirtyCommits )
+  // state.availableBranches = Stream()
+
+  // GitHub.repoBranches(vnode.attrs.repo).then( state.availableBranches )
 }
 
 exports.view = function (vnode) {
+  console.log("redraw")
   var activeCommit = vnode.state.activeCommit
   return m('.repo-map', [
 
-    vnode.state.branches()
-      ? m('.graph', { oncreate: renderGraph.papp(vnode.state) })
-      : m('p', "Loading...")
-    ,
 
-    m('select', { onchange: e => {
-      vnode.state.timeWindow( modes[e.currentTarget.value] )
-      }}, [
+    m('button', {
+      onclick: () => {
+        localStorage.clear()
+        window.location.reload(false) // Refresh from browser cache
+      }
+    }, "Clear cache & refresh"),
+
+
+    vnode.state.branches() ? [
+      m('.graph', { oncreate: renderGraph.papp(vnode.state) }),
+      m('p',
+        m('span', "Cached at ")
+      )
+    ] : [
+      m('p', "Loading...")
+    ],
+
+    m('select', {
+      value: vnode.state.mode,
+      onchange: e => {
+        vnode.state.timeWindow( modes[e.currentTarget.value] )
+      }
+    }, [
       m('option[value=nineDays]', "Last 9 days"),
       m('option[value=thirtyDays]', "Last 30 days"),
       m('option[value=thirtyCommits]', "Last 30 Commits"),
     ]),
 
-    m('select', { onchange: e => {
-      history.pushState({ url: `forks/${vnode.attrs.repo}/${e.currentTarget.value}` }, '', `/forks/${vnode.attrs.repo}/${e.currentTarget.value}`)
-      GitHub.singleBranchForkCommits(vnode.attrs.repo, e.currentTarget.value).map(vnode.state.branches)
-      }}, vnode.state.availableBranches().map( (option) => m(`option[value=${option.name}]`, `${option.name}`))
-    ),
+    // m('select', {
+    //   onchange: e => {
+    //     history.pushState({ url: `forks/${vnode.attrs.repo}/${e.currentTarget.value}` }, '', `/forks/${vnode.attrs.repo}/${e.currentTarget.value}`)
+    //     GitHub.singleBranchForkCommits(vnode.attrs.repo, e.currentTarget.value).map(vnode.state.branches)
+    //   }
+    // }, vnode.state.availableBranches.map( option =>
+    //     m(`option[value=${option.name}]`, `${option.name}`)
+    //   )
+    // ),
 
     m('.commit-info', activeCommit && [
       m('h3', activeCommit.commit.message),
@@ -65,7 +97,7 @@ function renderGraph (state, vnode) {
   //
   // Map data we get back from forkBranches to a format Timeline will accept
   //
-  var timelineDataStream = m.prop.combine(function (timeWindow, forkBranches) {
+  var timelineDataStream = Stream.combine(function (timeWindow, forkBranches) {
 
     return forkBranches().map(function (branch) {
       return {
@@ -111,10 +143,9 @@ function renderGraph (state, vnode) {
 
   state.chart.init(svg)
 
-  m.prop.combine(function (a, b) {
+  Stream.combine(function (a, b) {
     state.chart.render(svg, b())
   }, [state.timeWindow, timelineDataStream])
-  .error( err => console.log("RENDER ERROR:", err) )
 }
 
 function processCommits (startTime, commits) {
